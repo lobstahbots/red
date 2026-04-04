@@ -61,7 +61,7 @@ export async function POST(request: Request) {
         if (
             existingMatch &&
             (existingMatch.done ||
-                existingMatch.asOfTime.getTime() / 1000 >= data.dataAsOfTime)
+                existingMatch.asOfTime.getTime() >= data.dataAsOfTime)
         )
             continue;
         const wasDone = existingMatch?.done ?? false;
@@ -73,20 +73,20 @@ export async function POST(request: Request) {
         await prisma.match.upsert({
             where: { key: matchKey },
             update: {
-                asOfTime: new Date(data.dataAsOfTime * 1000),
+                asOfTime: new Date(data.dataAsOfTime),
                 done: wasDone || hasOnField,
                 status,
                 teams,
                 time: new Date(
                     match.times.estimatedStartTime
-                        ? match.times.estimatedStartTime * 1000
+                        ? match.times.estimatedStartTime
                         : 0,
                 ),
             },
             create: {
                 key: matchKey,
                 eventId: event.id,
-                asOfTime: new Date(data.dataAsOfTime * 1000),
+                asOfTime: new Date(data.dataAsOfTime),
                 done: hasOnField,
                 status,
                 teams,
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
                 red_score: 0,
                 time: new Date(
                     match.times.estimatedStartTime
-                        ? match.times.estimatedStartTime * 1000
+                        ? match.times.estimatedStartTime
                         : 0,
                 ),
             },
