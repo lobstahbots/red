@@ -10,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "mongodb"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 enum MatchStatus {
@@ -35,11 +35,12 @@ model Webcast {
 }
 
 model Event {
-  id       String    @id @default(auto()) @map("_id") @db.ObjectId
-  name     String
-  key      String    @unique
-  webcasts Webcast[]
-  matches  Match[]
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  key       String    @unique
+  webcasts  Webcast[]
+  matches   Match[]
+  updatedAt DateTime  @updatedAt
 }
 
 model Match {
@@ -52,4 +53,6 @@ model Match {
   teams      Int[]
   blue_score Float
   red_score  Float
+  asOfTime   DateTime
+  time       DateTime
 }
