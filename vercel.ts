@@ -1,6 +1,6 @@
 export const config = {
     functions: {
-        "nexus": {
+        "/nexus": {
             "includeFiles": "src/generated/prisma/**/*",
         }
     }
