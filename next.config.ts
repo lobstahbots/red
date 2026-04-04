@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
     /* config options here */
     reactCompiler: true,
     outputFileTracingIncludes: {
-      "/nexus": ["src/generated/prisma/*"]
+      "/**/*": ["./src/generated/prisma/**/*"]
     }
 };
 
