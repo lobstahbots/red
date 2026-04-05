@@ -1,4 +1,5 @@
 import { MatchStatus } from "@/generated/prisma/browser";
+import { Match, Prisma } from "@/generated/prisma/client";
 import { markDone } from "@/lib/match";
 import { prisma } from "@/lib/prisma";
 import { ensureExists } from "@/lib/tba";
@@ -46,6 +47,8 @@ export async function POST(request: Request) {
         existingMatches.map((match) => [match.key, match]),
     );
     let hasOnField = false;
+    const create: Prisma.MatchCreateManyInput[] = [];
+    const update: Promise<Match>[] = [];
     for (const match of data.matches.toReversed()) {
         if (match.label.startsWith("Practice")) continue;
         const matchNumber = parseInt(match.label.match(/\d+/)?.[0] ?? "0");
@@ -70,20 +73,25 @@ export async function POST(request: Request) {
             ...(match.redTeams ?? []),
             ...(match.blueTeams ?? []),
         ].map((t) => parseInt(t ?? "0"));
-        await prisma.match.upsert({
-            where: { key: matchKey },
-            update: {
-                asOfTime: new Date(data.dataAsOfTime),
-                done: wasDone || hasOnField,
-                status,
-                teams,
-                time: new Date(
-                    match.times.estimatedStartTime
-                        ? match.times.estimatedStartTime
-                        : 0,
-                ),
-            },
-            create: {
+        if (existingMatch)
+            update.push(
+                prisma.match.update({
+                    where: { key: matchKey },
+                    data: {
+                        asOfTime: new Date(data.dataAsOfTime),
+                        done: wasDone || hasOnField,
+                        status,
+                        teams,
+                        time: new Date(
+                            match.times.estimatedStartTime
+                                ? match.times.estimatedStartTime
+                                : 0,
+                        ),
+                    },
+                }),
+            );
+        else {
+            create.push({
                 key: matchKey,
                 eventId: event.id,
                 asOfTime: new Date(data.dataAsOfTime),
@@ -97,10 +105,12 @@ export async function POST(request: Request) {
                         ? match.times.estimatedStartTime
                         : 0,
                 ),
-            },
-        });
+            });
+        }
         if (!wasDone && hasOnField) markDone(matchKey);
         hasOnField ||= status === MatchStatus.ON_FIELD;
     }
+    await Promise.all([...update, prisma.match.createMany({ data: create })]);
+
     return Response.json({});
 }
