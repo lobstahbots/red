@@ -110,7 +110,7 @@ export async function POST(request: Request) {
         if (!wasDone && hasOnField) markDone(matchKey);
         hasOnField ||= status === MatchStatus.ON_FIELD;
     }
-    await Promise.all([...update, prisma.match.createMany({ data: create })]);
+    await Promise.all([...update, create.length > 0 ? prisma.match.createMany({ data: create }): Promise.resolve()]);
 
     return Response.json({});
 }
