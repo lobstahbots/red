@@ -51,14 +51,14 @@ function rank(
     return scoreFactor * timeFactor;
 }
 
-export function get<T extends Match>(matches: T[], preferences: Preferences): T {
-    const currTime = new Date();
+export function get<T extends Match>(matches: T[], preferences: Preferences, time: Date | undefined): T {
+    const currTime = time || new Date();
     const matchesWith = [];
     const matchesWithout = [];
     const teamSet = new Set(preferences.mustSeeTeams);
     for (const match of matches) {
         if (match.time.getTime() - currTime.getTime() > preferences.maxTime) continue;
-        if (match.teams.some(teamSet.has)) matchesWith.push(match);
+        if (match.teams.some(team => teamSet.has(team))) matchesWith.push(match);
         else matchesWithout.push(match);
     }
     if (matchesWith.length > 0) {
