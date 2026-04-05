@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
     if (request.headers.get("Cron-Token") !== process.env.CRON_TOKEN)
-        return Response.json({ error: "Unauthorized", your_token: request.headers.get("Cron-Token"), my_token: process.env.CRON_TOKEN }, { status: 401 });
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     const matches = await prisma.match.findMany({
         where: {
             done: false,
