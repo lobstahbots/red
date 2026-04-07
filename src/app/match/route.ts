@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     const time = new Date();
     const matches = await prisma.match.findMany({
         where: {
-            // done: false,
+            done: false,
             time: {
                 gte: time,
                 lte: new Date(time.getTime() + preferences.maxTime),
