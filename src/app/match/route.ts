@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma";
 export async function POST(request: Request) {
     const preferences = ((await request.json()) ?? DEFAULT) as Preferences;
     const time = new Date();
-    time.setDate(3);
     const matches = await prisma.match.findMany({
         where: {
             // done: false,
