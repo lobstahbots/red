@@ -115,8 +115,12 @@ export async function POST(request: Request) {
         if (!wasDone && hasOnField) markDone(matchKey);
         hasOnField ||= status === MatchStatus.ON_FIELD;
     }
-    await prisma.match.deleteMany(deleteKeys);
-    if (create) await prisma.match.createMany({ data: create });
+    await Promise.all([
+        prisma.match.deleteMany(deleteKeys),
+        create.length > 0
+            ? prisma.match.createMany({ data: create })
+            : Promise.resolve(),
+    ]);
 
     return Response.json({});
 }
