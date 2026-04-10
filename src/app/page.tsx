@@ -5,9 +5,9 @@ import { DEFAULT } from "@/lib/preference";
 import { useRef, useState } from "react";
 
 export default function Home() {
-    const [match, setMatch] = useState<{
+    const [data, setData] = useState<{
         event: { name: string };
-        key: string;
+        match: { key: string };
         webcasts: { type: "TWITCH" | "YOUTUBE"; channel: string }[];
     } | null>(null);
     const [idx, setIdx] = useState(0);
@@ -19,33 +19,40 @@ export default function Home() {
         });
         const data = await match.json();
         if (data.status === "success") {
-            setMatch(data);
+            setData(data);
             setIdx(0);
         }
     };
+    const key = data?.match.key.split("_")[1];
     return (
         <div className={styles.page}>
-            {match === null ? (
+            {data === null ? (
                 <div className={styles.buttons}>
                     <button className={styles.button} onClick={loadMatch}>
                         Load match
                     </button>
                 </div>
             ) : null}
-            {match && match && (
+            {data && (
                 <>
                     <Stream
-                        type={match.webcasts[idx].type}
-                        channel={match.webcasts[idx].channel}
+                        type={data.webcasts[idx].type}
+                        channel={data.webcasts[idx].channel}
                     />
                     <div className={styles.matchInfo}>
-                        <h3>{match.event.name}</h3>
-                        <p>{match.key}</p>
-                        {match.webcasts.length > 1 && (
+                        <h3>
+                            {data.event.name}{" "}
+                            {key!.startsWith("qm")
+                                ? "Qualification " + key!.slice(2)
+                                : key!.startsWith("sf")
+                                  ? "Playoffs " + key!.slice(2, key!.length - 2)
+                                  : "Finals " + key!.slice(4)}
+                        </h3>
+                        {data.webcasts.length > 1 && (
                             <button
                                 className={styles.button}
                                 onClick={() =>
-                                    setIdx((idx + 1) % match.webcasts.length)
+                                    setIdx((idx + 1) % data.webcasts.length)
                                 }
                             >
                                 Switch stream
@@ -54,8 +61,8 @@ export default function Home() {
                         <button
                             className={`${styles.button} ${styles.secondaryButton}`}
                             onClick={async () => {
-                                if (!toSkip.current.includes(match.key)) {
-                                    toSkip.current.unshift(match.key);
+                                if (!toSkip.current.includes(data.match.key)) {
+                                    toSkip.current.unshift(data.match.key);
                                     toSkip.current.splice(5);
                                 }
                                 await loadMatch();
