@@ -1,4 +1,4 @@
-import { Match, } from "@/generated/prisma/client";
+import { Match } from "@/generated/prisma/client";
 
 export interface Preferences {
     higherScoreWeight: number;
@@ -6,6 +6,7 @@ export interface Preferences {
     mustSeeTeams: number[];
     maxTime: number;
     dropoff: "linear" | "quick" | "medium" | "slow" | "none";
+    skipMatches: string[];
 }
 
 export const DEFAULT: Preferences = {
@@ -14,6 +15,7 @@ export const DEFAULT: Preferences = {
     mustSeeTeams: [],
     maxTime: 3 * 60 * 1000,
     dropoff: "medium",
+    skipMatches: [],
 };
 
 function rank(
@@ -51,21 +53,33 @@ function rank(
     return scoreFactor * timeFactor;
 }
 
-export function get<T extends Match>(matches: T[], preferences: Preferences, time: Date | undefined): T {
+export function get<T extends Match>(
+    matches: T[],
+    preferences: Preferences,
+    time: Date | undefined,
+): T {
     const currTime = time || new Date();
     const matchesWith = [];
     const matchesWithout = [];
     const teamSet = new Set(preferences.mustSeeTeams);
     for (const match of matches) {
-        if (match.time.getTime() - currTime.getTime() > preferences.maxTime) continue;
-        if (match.teams.some(team => teamSet.has(team))) matchesWith.push(match);
+        if (match.time.getTime() - currTime.getTime() > preferences.maxTime)
+            continue;
+        if (match.teams.some((team) => teamSet.has(team)))
+            matchesWith.push(match);
         else matchesWithout.push(match);
     }
     if (matchesWith.length > 0) {
-        matchesWith.sort((a, b) => rank(b, preferences, currTime) - rank(a, preferences, currTime));
+        matchesWith.sort(
+            (a, b) =>
+                rank(b, preferences, currTime) - rank(a, preferences, currTime),
+        );
         return matchesWith[0];
     } else {
-        matchesWithout.sort((a, b) => rank(b, preferences, currTime) - rank(a, preferences, currTime));
+        matchesWithout.sort(
+            (a, b) =>
+                rank(b, preferences, currTime) - rank(a, preferences, currTime),
+        );
         return matchesWithout[0];
     }
 }

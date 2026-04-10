@@ -12,6 +12,9 @@ export async function POST(request: Request) {
                 gte: time,
                 lte: new Date(time.getTime() + preferences.maxTime),
             },
+            key: {
+                notIn: preferences.skipMatches,
+            },
         },
         include: {
             event: {

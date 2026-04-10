@@ -1,6 +1,7 @@
 "use client";
 import styles from "./page.module.css";
 import Stream from "@/components/Stream";
+import { DEFAULT } from "@/lib/preference";
 import { useState } from "react";
 
 export default function Home() {
@@ -10,10 +11,11 @@ export default function Home() {
         webcasts: { type: "TWITCH" | "YOUTUBE"; channel: string }[];
     } | null>(null);
     const [idx, setIdx] = useState(0);
+    const [toSkip, setToSkip] = useState<string[]>([]);
     const loadMatch = async () => {
         const match = await fetch("/match", {
             method: "POST",
-            body: "null",
+            body: JSON.stringify({ ...DEFAULT, skipMatches: toSkip }),
         });
         const data = await match.json();
         if (data.status === "success") {
@@ -42,14 +44,26 @@ export default function Home() {
                         {match.webcasts.length > 1 && (
                             <button
                                 className={styles.button}
-                                onClick={() => setIdx((idx + 1) % match.webcasts.length)}
+                                onClick={() =>
+                                    setIdx((idx + 1) % match.webcasts.length)
+                                }
                             >
                                 Switch stream
                             </button>
                         )}
                         <button
                             className={`${styles.button} ${styles.secondaryButton}`}
-                            onClick={loadMatch}
+                            onClick={async () => {
+                                if (!toSkip.includes(match.key))
+                                    setToSkip((existing) => [
+                                        match.key,
+                                        ...existing.slice(
+                                            0,
+                                            Math.min(4, existing.length),
+                                        ),
+                                    ]);
+                                await loadMatch();
+                            }}
                         >
                             New Match
                         </button>
