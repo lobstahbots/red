@@ -7,7 +7,7 @@ export default function Home() {
     const [match, setMatch] = useState<{
         event: { name: string };
         key: string;
-        streams: { type: "TWITCH" | "YOUTUBE"; channel: string }[];
+        webcasts: { type: "TWITCH" | "YOUTUBE"; channel: string }[];
     } | null>(null);
     const [idx, setIdx] = useState(0);
     const loadMatch = async () => {
@@ -33,16 +33,16 @@ export default function Home() {
             {match && match && (
                 <>
                     <Stream
-                        type={match.streams[idx].type}
-                        channel={match.streams[idx].channel}
+                        type={match.webcasts[idx].type}
+                        channel={match.webcasts[idx].channel}
                     />
                     <div className={styles.matchInfo}>
                         <h3>{match.event.name}</h3>
                         <p>{match.key}</p>
-                        {match.streams.length > 1 && (
+                        {match.webcasts.length > 1 && (
                             <button
                                 className={styles.button}
-                                onClick={() => setIdx((idx + 1) % match.streams.length)}
+                                onClick={() => setIdx((idx + 1) % match.webcasts.length)}
                             >
                                 Switch stream
                             </button>
