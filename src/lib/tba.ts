@@ -42,6 +42,47 @@ export async function ensureExists(eventKey: string) {
                 webcasts: true,
             },
         });
+    } else if (event.updatedAt.getTime() < Date.now() - 3 * 60 * 60 * 1000) {
+        const res = await fetch(
+            `https://www.thebluealliance.com/api/v3/event/${eventKey}`,
+            {
+                headers: {
+                    "X-TBA-Auth-Key": TBA_API_KEY,
+                },
+            },
+        );
+        const eventData = await res.json();
+        let deleted;
+        [deleted, event] = await prisma.$transaction([
+            prisma.webcast.deleteMany({ where: { eventId: event.id } }),
+            prisma.event.update({
+                where: { id: event.id },
+                data: {
+                    key: eventData.key,
+                    name: eventData.name,
+                    webcasts: {
+                        create: eventData.webcasts.map(
+                            (webcast: {
+                                type: string;
+                                channel: string;
+                                date: string | null;
+                            }): Prisma.WebcastCreateManyEventInput => ({
+                                type: WebcastType[
+                                    webcast.type.toUpperCase() as keyof typeof WebcastType
+                                ],
+                                channel: webcast.channel,
+                                date: webcast.date
+                                    ? new Date(webcast.date)
+                                    : null,
+                            }),
+                        ),
+                    },
+                },
+                include: {
+                    webcasts: true,
+                },
+            }),
+        ]);
     }
     return event;
 }
