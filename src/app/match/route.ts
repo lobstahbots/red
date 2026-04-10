@@ -15,6 +15,11 @@ export async function POST(request: Request) {
             key: {
                 notIn: preferences.skipMatches,
             },
+            event: {
+                webcasts: {
+                    some: {},
+                },
+            },
         },
         include: {
             event: {
