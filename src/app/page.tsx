@@ -2,7 +2,7 @@
 import styles from "./page.module.css";
 import Stream from "@/components/Stream";
 import { DEFAULT } from "@/lib/preference";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export default function Home() {
     const [match, setMatch] = useState<{
@@ -11,12 +11,11 @@ export default function Home() {
         webcasts: { type: "TWITCH" | "YOUTUBE"; channel: string }[];
     } | null>(null);
     const [idx, setIdx] = useState(0);
-    const [toSkip, setToSkip] = useState<string[]>([]);
+    const toSkip = useRef<string[]>([]);
     const loadMatch = async () => {
-        console.log(toSkip);
         const match = await fetch("/match", {
             method: "POST",
-            body: JSON.stringify({ ...DEFAULT, skipMatches: toSkip }),
+            body: JSON.stringify({ ...DEFAULT, skipMatches: toSkip.current }),
         });
         const data = await match.json();
         if (data.status === "success") {
@@ -55,14 +54,10 @@ export default function Home() {
                         <button
                             className={`${styles.button} ${styles.secondaryButton}`}
                             onClick={async () => {
-                                if (!toSkip.includes(match.key))
-                                    setToSkip((existing) => [
-                                        match.key,
-                                        ...existing.slice(
-                                            0,
-                                            Math.min(4, existing.length),
-                                        ),
-                                    ]);
+                                if (!toSkip.current.includes(match.key)) {
+                                    toSkip.current.unshift(match.key);
+                                    toSkip.current.splice(5);
+                                }
                                 await loadMatch();
                             }}
                         >
