@@ -4,14 +4,12 @@ import Stream from "@/components/Stream";
 import { useState } from "react";
 
 export default function Home() {
-    const [streamType, setStreamType] = useState<"TWITCH" | "YOUTUBE" | null>(
-        null,
-    );
-    const [channel, setChannel] = useState<string>("");
     const [match, setMatch] = useState<{
         event: { name: string };
         key: string;
+        streams: { type: "TWITCH" | "YOUTUBE"; channel: string }[];
     } | null>(null);
+    const [idx, setIdx] = useState(0);
     const loadMatch = async () => {
         const match = await fetch("/match", {
             method: "POST",
@@ -19,31 +17,41 @@ export default function Home() {
         });
         const data = await match.json();
         if (data.status === "success") {
-            setStreamType(data.webcasts[0].type);
-            setChannel(data.webcasts[0].channel);
             setMatch(data);
+            setIdx(0);
         }
     };
     return (
         <div className={styles.page}>
-            {streamType === null ? (
+            {match === null ? (
                 <div className={styles.buttons}>
                     <button className={styles.button} onClick={loadMatch}>
                         Load match
                     </button>
                 </div>
             ) : null}
-            {streamType && match && (
+            {match && match && (
                 <>
-                    <Stream type={streamType} channel={channel} />
+                    <Stream
+                        type={match.streams[idx].type}
+                        channel={match.streams[idx].channel}
+                    />
                     <div className={styles.matchInfo}>
                         <h3>{match.event.name}</h3>
                         <p>{match.key}</p>
+                        {match.streams.length > 1 && (
+                            <button
+                                className={styles.button}
+                                onClick={() => setIdx((idx + 1) % match.streams.length)}
+                            >
+                                Switch stream
+                            </button>
+                        )}
                         <button
                             className={`${styles.button} ${styles.secondaryButton}`}
                             onClick={loadMatch}
                         >
-                            Next
+                            New Match
                         </button>
                     </div>
                 </>
