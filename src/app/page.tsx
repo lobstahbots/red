@@ -13,6 +13,7 @@ export default function Home() {
     const [idx, setIdx] = useState(0);
     const [toSkip, setToSkip] = useState<string[]>([]);
     const loadMatch = async () => {
+        console.log(toSkip);
         const match = await fetch("/match", {
             method: "POST",
             body: JSON.stringify({ ...DEFAULT, skipMatches: toSkip }),
