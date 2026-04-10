@@ -16,7 +16,10 @@ export default function Home() {
                     <button
                         className={styles.button}
                         onClick={async () => {
-                            const match = await fetch("/match");
+                            const match = await fetch("/match", {
+                                method: "POST",
+                                body: "null",
+                            });
                             const data = await match.json();
                             if (data.status === "success") {
                                 setStreamType(data.webcasts[0].type);
