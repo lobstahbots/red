@@ -44,6 +44,7 @@ export default function Home() {
                     loadMatch();
                 }
             }).subscribe();
+            console.log(channelRef.current.topic);
         }
     }, [data])
     const key = data?.match.key.split("_")[1];
