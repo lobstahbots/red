@@ -24,4 +24,5 @@ export async function POST(request: Request) {
         });
         markDone(key);
     }
+    return Response.json({ success: true });
 }
