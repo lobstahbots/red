@@ -56,3 +56,8 @@ model Match {
   asOfTime   DateTime
   time       DateTime
 }
+
+model VerificationKey {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  key   String
+}
