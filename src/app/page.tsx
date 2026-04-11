@@ -2,7 +2,7 @@
 import styles from "./page.module.css";
 import Stream from "@/components/Stream";
 import { DEFAULT } from "@/lib/preference";
-import { RealtimeChannel, RealtimeClient } from "@supabase/realtime-js";
+import { REALTIME_SUBSCRIBE_STATES, RealtimeChannel, RealtimeClient } from "@supabase/realtime-js";
 import { useEffect, useRef, useState } from "react";
 
 const supabase = new RealtimeClient(
@@ -33,30 +33,30 @@ export default function Home() {
             setIdx(0);
         }
     };
+    const subToChannel = async () => {
+        await supabase.removeAllChannels();
+        if (data) {
+            supabase
+                .channel(data.match.key.split("_")[0])
+                .on("broadcast", { event: "match_done" }, async (payload) => {
+                    console.log(payload);
+                    if (payload.payload.key === data.match.key) {
+                        await loadMatch();
+                    }
+                })
+                .subscribe((status, error) => {
+                    console.log(status);
+                    if (error) {
+                        console.error(error);
+                    }
+                    if (status === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR || status === REALTIME_SUBSCRIBE_STATES.TIMED_OUT) {
+                        setTimeout(subToChannel, 1000);
+                    }
+                });
+        }
+    };
     useEffect(() => {
-        (async () => {
-            await supabase.removeAllChannels();
-            if (data) {
-                supabase
-                    .channel(data.match.key.split("_")[0])
-                    .on(
-                        "broadcast",
-                        { event: "match_done" },
-                        async (payload) => {
-                            console.log(payload);
-                            if (payload.payload.key === data.match.key) {
-                                await loadMatch();
-                            }
-                        },
-                    )
-                    .subscribe((status, error) => {
-                        console.log(status);
-                        if (error) {
-                            console.error(error);
-                        }
-                    });
-            }
-        })();
+        subToChannel();
     }, [data]);
     const key = data?.match.key.split("_")[1];
     return (
