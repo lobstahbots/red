@@ -39,13 +39,22 @@ export default function Home() {
             if (data) {
                 supabase
                     .channel(data.match.key.split("_")[0])
-                    .on("broadcast", { event: "match_done" }, async (payload) => {
-                        console.log(payload);
-                        if (payload.payload.key === data.match.key) {
-                            await loadMatch();
+                    .on(
+                        "broadcast",
+                        { event: "match_done" },
+                        async (payload) => {
+                            console.log(payload);
+                            if (payload.payload.key === data.match.key) {
+                                await loadMatch();
+                            }
+                        },
+                    )
+                    .subscribe((status, error) => {
+                        console.log(status);
+                        if (error) {
+                            console.error(error);
                         }
-                    })
-                    .subscribe();
+                    });
             }
         })();
     }, [data]);
