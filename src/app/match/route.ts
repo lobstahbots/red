@@ -33,6 +33,7 @@ export async function POST(request: Request) {
         return Response.json({ status: "noMatch", match: null });
     const selectedMatch = get(matches, preferences, time);
     const webcasts: { type: WebcastType; channel: string }[] = [];
+    time.setTime(time.getTime() - 8 * 60 * 60 * 1000);
     for (const webcast of selectedMatch.event.webcasts) {
         if (
             webcast.date === null ||
