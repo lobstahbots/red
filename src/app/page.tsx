@@ -39,12 +39,13 @@ export default function Home() {
         if (data) {
             channelRef.current = supabase.channel(data.match.key.split("_")[0]);
             channelRef.current.on("broadcast", { event: "match_done" }, (payload) => {
+                console.log(payload);
                 if (payload.key === data.match.key) {
                     loadMatch();
                 }
             }).subscribe();
         }
-    }, [data?.event?.name])
+    }, [data])
     const key = data?.match.key.split("_")[1];
     return (
         <div className={styles.page}>
