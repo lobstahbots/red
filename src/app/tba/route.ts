@@ -12,7 +12,7 @@ export async function POST(request: Request) {
         return Response.json({ message_type: "pong" });
     if (content.message_type === "verification")
         await prisma.verificationKey.create({
-            data: { key: content.message_data.key },
+            data: { key: content.message_data.verification_key },
         });
     if (content.message_type === "match_score") {
         const key = content.message_data.match.key;
