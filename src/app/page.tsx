@@ -2,7 +2,17 @@
 import styles from "./page.module.css";
 import Stream from "@/components/Stream";
 import { DEFAULT } from "@/lib/preference";
-import { useRef, useState } from "react";
+import { RealtimeChannel, RealtimeClient } from "@supabase/realtime-js";
+import { useEffect, useRef, useState } from "react";
+
+const supabase = new RealtimeClient(
+    "wss://" + process.env.NEXT_PUBLIC_SUPABASE_URL + "/realtime/v1",
+    {
+        params: {
+            apikey: process.env.NEXT_PUBLIC_SUPABASE_PUB_KEY,
+        },
+    },
+);
 
 export default function Home() {
     const [data, setData] = useState<{
@@ -23,6 +33,18 @@ export default function Home() {
             setIdx(0);
         }
     };
+    const channelRef = useRef<RealtimeChannel | null>(null);
+    useEffect(() => {
+        supabase.removeAllChannels();
+        if (data) {
+            channelRef.current = supabase.channel(data.match.key.split("_")[0]);
+            channelRef.current.on("broadcast", { event: "match_done" }, (payload) => {
+                if (payload.key === data.match.key) {
+                    loadMatch();
+                }
+            }).subscribe();
+        }
+    }, [data?.event?.name])
     const key = data?.match.key.split("_")[1];
     return (
         <div className={styles.page}>
