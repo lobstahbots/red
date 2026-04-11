@@ -41,7 +41,7 @@ export default function Home() {
                     .channel(data.match.key.split("_")[0])
                     .on("broadcast", { event: "match_done" }, async (payload) => {
                         console.log(payload);
-                        if (payload.key === data.match.key) {
+                        if (payload.payload.key === data.match.key) {
                             await loadMatch();
                         }
                     })
