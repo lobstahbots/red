@@ -33,20 +33,22 @@ export default function Home() {
             setIdx(0);
         }
     };
-    const channelRef = useRef<RealtimeChannel | null>(null);
     useEffect(() => {
-        supabase.removeAllChannels();
-        if (data) {
-            channelRef.current = supabase.channel(data.match.key.split("_")[0]);
-            channelRef.current.on("broadcast", { event: "match_done" }, (payload) => {
-                console.log(payload);
-                if (payload.key === data.match.key) {
-                    loadMatch();
-                }
-            }).subscribe();
-            console.log(channelRef.current.topic);
-        }
-    }, [data])
+        (async () => {
+            await supabase.removeAllChannels();
+            if (data) {
+                supabase
+                    .channel(data.match.key.split("_")[0])
+                    .on("broadcast", { event: "match_done" }, async (payload) => {
+                        console.log(payload);
+                        if (payload.key === data.match.key) {
+                            await loadMatch();
+                        }
+                    })
+                    .subscribe();
+            }
+        })();
+    }, [data]);
     const key = data?.match.key.split("_")[1];
     return (
         <div className={styles.page}>
