@@ -127,7 +127,7 @@ export default function Home() {
                                 ? "Qualification " + key!.slice(2)
                                 : key!.startsWith("sf")
                                   ? "Playoffs " + key!.slice(2, key!.length - 2)
-                                  : "Finals " + key!.slice(4)}
+                                  : "Finals " + key!.slice(3)}
                         </h3>
                         <div className={styles.buttonSpacer} />
                         {data.webcasts.length > 1 && (
