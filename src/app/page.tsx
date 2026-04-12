@@ -2,7 +2,11 @@
 import styles from "./page.module.css";
 import Stream from "@/components/Stream";
 import { DEFAULT } from "@/lib/preference";
-import { REALTIME_SUBSCRIBE_STATES, RealtimeChannel, RealtimeClient } from "@supabase/realtime-js";
+import {
+    REALTIME_SUBSCRIBE_STATES,
+    RealtimeChannel,
+    RealtimeClient,
+} from "@supabase/realtime-js";
 import { useEffect, useRef, useState } from "react";
 
 const supabase = new RealtimeClient(
@@ -20,6 +24,9 @@ export default function Home() {
         match: { key: string };
         webcasts: { type: "TWITCH" | "YOUTUBE"; channel: string }[];
     } | null>(null);
+    const [statusMessage, setStatusMessage] = useState<string>(
+        "Load a match to start!",
+    );
     const [idx, setIdx] = useState(0);
     const toSkip = useRef<string[]>([]);
     const loadMatch = async () => {
@@ -31,6 +38,17 @@ export default function Home() {
         if (data.status === "success") {
             setData(data);
             setIdx(0);
+        } else if (data.status === "noMatch") {
+            if (toSkip.current.length !== 0) {
+                toSkip.current = [];
+                await loadMatch();
+                return;
+            }
+            setData(null);
+            setStatusMessage(
+                "No matches found. The system will try to fetch new matches periodically, or do so manually below.",
+            );
+            setTimeout(loadMatch, 10000);
         }
     };
     const subToChannel = async () => {
@@ -49,7 +67,10 @@ export default function Home() {
                     if (error) {
                         console.error(error);
                     }
-                    if (status === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR || status === REALTIME_SUBSCRIBE_STATES.TIMED_OUT) {
+                    if (
+                        status === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR ||
+                        status === REALTIME_SUBSCRIBE_STATES.TIMED_OUT
+                    ) {
                         setTimeout(subToChannel, 1000);
                     }
                 });
@@ -63,6 +84,7 @@ export default function Home() {
         <div className={styles.page}>
             {data === null ? (
                 <div className={styles.buttons}>
+                    <div>{statusMessage}</div>
                     <button className={styles.button} onClick={loadMatch}>
                         Load match
                     </button>
@@ -83,6 +105,7 @@ export default function Home() {
                                   ? "Playoffs " + key!.slice(2, key!.length - 2)
                                   : "Finals " + key!.slice(4)}
                         </h3>
+                        <div className={styles.buttonSpacer} />
                         {data.webcasts.length > 1 && (
                             <button
                                 className={styles.button}
