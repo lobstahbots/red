@@ -1,7 +1,7 @@
 "use client";
 import styles from "./page.module.css";
 import Stream from "@/components/Stream";
-import { DEFAULT } from "@/lib/preference";
+import { DEFAULT, Preferences } from "@/lib/preference";
 import {
     REALTIME_SUBSCRIBE_STATES,
     RealtimeChannel,
@@ -24,21 +24,34 @@ export default function Home() {
         match: { key: string };
         webcasts: { type: "TWITCH" | "YOUTUBE"; channel: string }[];
     } | null>(null);
+    const [previous, setPrevious] = useState<{
+        event: { name: string };
+        match: { key: string };
+        webcasts: { type: "TWITCH" | "YOUTUBE"; channel: string }[];
+    } | null>(null);
     const [statusMessage, setStatusMessage] = useState<string>(
         "Load a match to start!",
     );
+    const preferenceRef = useRef<Preferences>(DEFAULT);
+    const setPreferences = (preferences: Preferences) => {
+        preferenceRef.current = { ...preferenceRef.current, ...preferences };
+    };
     const [idx, setIdx] = useState(0);
     const toSkip = useRef<string[]>([]);
     const loadMatch = async () => {
         const match = await fetch("/match", {
             method: "POST",
-            body: JSON.stringify({ ...DEFAULT, skipMatches: toSkip.current }),
+            body: JSON.stringify({
+                ...preferenceRef.current,
+                skipMatches: toSkip.current,
+            }),
         });
-        const data = await match.json();
-        if (data.status === "success") {
-            setData(data);
+        const newData = await match.json();
+        if (newData.status === "success") {
+            setPrevious(data);
+            setData(newData);
             setIdx(0);
-        } else if (data.status === "noMatch") {
+        } else if (newData.status === "noMatch") {
             if (toSkip.current.length !== 0) {
                 toSkip.current = [];
                 await loadMatch();
@@ -88,6 +101,17 @@ export default function Home() {
                     <button className={styles.button} onClick={loadMatch}>
                         Load match
                     </button>
+                    {previous && (
+                        <button
+                            className={`${styles.button} ${styles.secondaryButton}`}
+                            onClick={async () => {
+                                setData(previous);
+                                setPrevious(null);
+                            }}
+                        >
+                            Previous
+                        </button>
+                    )}
                 </div>
             ) : null}
             {data && (
@@ -116,6 +140,19 @@ export default function Home() {
                                 Switch stream
                             </button>
                         )}
+                        {
+                            previous && (
+                                <button
+                                    className={`${styles.button} ${styles.secondaryButton}`}
+                                    onClick={async () => {
+                                        setData(previous);
+                                        setPrevious(null);
+                                    }}
+                                >
+                                    Previous
+                                </button>
+                            )
+                        }
                         <button
                             className={`${styles.button} ${styles.secondaryButton}`}
                             onClick={async () => {
