@@ -4,7 +4,6 @@ import Stream from "@/components/Stream";
 import { DEFAULT, Preferences } from "@/lib/preference";
 import {
     REALTIME_SUBSCRIBE_STATES,
-    RealtimeChannel,
     RealtimeClient,
 } from "@supabase/realtime-js";
 import { useEffect, useRef, useState } from "react";
@@ -48,7 +47,9 @@ export default function Home() {
         });
         const newData = await match.json();
         if (newData.status === "success") {
-            setPrevious(data);
+            if (data?.match.key !== newData.match.key) {
+                setPrevious(data);
+            }
             setData(newData);
             setIdx(0);
         } else if (newData.status === "noMatch") {
