@@ -59,7 +59,7 @@ export async function ensureExists(eventKey: string) {
                 where: { id: event.id },
                 data: {
                     key: eventData.key,
-                    name: eventData.name,
+                    name: eventData.name.split(" presented by ")[0],
                     webcasts: {
                         create: eventData.webcasts.map(
                             (webcast: {
