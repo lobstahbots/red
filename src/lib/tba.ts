@@ -3,6 +3,14 @@ import { prisma } from "./prisma";
 
 const TBA_API_KEY: string = process.env["TBA_API_KEY"]!;
 
+function cleanName(name: string): string {
+    return name
+        .split(" presented by ")[0]
+        .replace(/FIRST in ([a-z])[a-z]*/gi, (match, firstLetter) => {
+            return "Fi" + firstLetter.toUpperCase();
+        }).replace("District Championship", "DCMP");
+}
+
 export async function ensureExists(eventKey: string) {
     let event = await prisma.event.findFirst({
         where: { key: eventKey },
@@ -21,7 +29,7 @@ export async function ensureExists(eventKey: string) {
         event = await prisma.event.create({
             data: {
                 key: eventData.key,
-                name: eventData.name,
+                name: cleanName(eventData.name),
                 webcasts: {
                     create: eventData.webcasts.map(
                         (webcast: {
@@ -59,7 +67,7 @@ export async function ensureExists(eventKey: string) {
                 where: { id: event.id },
                 data: {
                     key: eventData.key,
-                    name: eventData.name.split(" presented by ")[0],
+                    name: cleanName(eventData.name),
                     webcasts: {
                         create: eventData.webcasts.map(
                             (webcast: {
