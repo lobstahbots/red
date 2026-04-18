@@ -9,7 +9,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -26,16 +26,16 @@ enum WebcastType {
 }
 
 model Webcast {
-  id      String      @id @default(auto()) @map("_id") @db.ObjectId
+  id      String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   type    WebcastType
   channel String
   date    DateTime?
   event   Event       @relation(fields: [eventId], references: [id])
-  eventId String      @db.ObjectId
+  eventId String      @db.Uuid
 }
 
 model Event {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String
   key       String    @unique
   webcasts  Webcast[]
@@ -44,10 +44,10 @@ model Event {
 }
 
 model Match {
-  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   status     MatchStatus @default(QUEUING_SOON)
   event      Event       @relation(fields: [eventId], references: [id])
-  eventId    String      @db.ObjectId
+  eventId    String      @db.Uuid
   key        String      @unique
   done       Boolean     @default(false)
   teams      Int[]
@@ -58,6 +58,6 @@ model Match {
 }
 
 model VerificationKey {
-  id    String @id @default(auto()) @map("_id") @db.ObjectId
-  key   String
+  id  String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key String
 }
