@@ -3,6 +3,7 @@ import { Match, Prisma } from "@/generated/prisma/client";
 import { markDone } from "@/lib/match";
 import { prisma } from "@/lib/prisma";
 import { ensureExists } from "@/lib/tba";
+import { PrismaPromise } from "@prisma/client/runtime/client";
 
 const NEXUS_TOKEN: string = process.env["NEXUS_TOKEN"]!;
 
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
     );
     let hasOnField = false;
     const create: Prisma.MatchCreateManyInput[] = [];
-    const update: Promise<Match>[] = [];
+    const update: PrismaPromise<Match>[] = [];
     for (const match of data.matches.toReversed()) {
         if (match.label.startsWith("Practice")) continue;
         const matchNumber = parseInt(match.label.match(/\d+/)?.[0] ?? "0");
@@ -91,6 +92,12 @@ export async function POST(request: Request) {
                 }),
             );
         else {
+            if (match.replayOf !== null) {
+                const index = create.findIndex((c) => c.key === matchKey);
+                if (index !== -1) {
+                    create.splice(index, 1);
+                }
+            }
             create.push({
                 key: matchKey,
                 eventId: event.id,
@@ -110,7 +117,10 @@ export async function POST(request: Request) {
         if (!wasDone && hasOnField) markDone(matchKey);
         hasOnField ||= status === MatchStatus.ON_FIELD;
     }
-    await Promise.all([...update, create.length > 0 ? prisma.match.createMany({ data: create }): Promise.resolve()]);
+    await prisma.$transaction([
+        ...update,
+        prisma.match.createMany({ data: create }),
+    ]);
 
     return Response.json({});
 }
