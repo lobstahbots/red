@@ -14,6 +14,17 @@ const matchStatusMap = {
     "On field": MatchStatus.ON_FIELD,
 };
 
+const DIVISIONS = new Set([
+    "archimedes",
+    "curie",
+    "daly",
+    "galileo",
+    "hopper",
+    "johnson",
+    "milstein",
+    "newton",
+]);
+
 export async function POST(request: Request) {
     if (request.headers.get("Nexus-Token") !== NEXUS_TOKEN)
         return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -40,7 +51,11 @@ export async function POST(request: Request) {
             replayOf: string | null;
         }[];
     };
-    const event = await ensureExists(data.eventKey);
+    const event = await ensureExists(
+        DIVISIONS.has(data.eventKey.slice(4))
+            ? data.eventKey
+            : data.eventKey.slice(0, 7),
+    );
     const existingMatches = await prisma.match.findMany({
         where: { eventId: event.id },
     });
@@ -54,7 +69,7 @@ export async function POST(request: Request) {
         if (match.label.startsWith("Practice")) continue;
         const matchNumber = parseInt(match.label.match(/\d+/)?.[0] ?? "0");
         const matchKey =
-            data.eventKey +
+            event.key +
             "_" +
             (match.label.startsWith("Final")
                 ? `f1m${matchNumber}`
