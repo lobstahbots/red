@@ -53,8 +53,7 @@ export async function POST(request: Request) {
     };
     const event = await ensureExists(
         DIVISIONS.has(data.eventKey.slice(4))
-            ? data.eventKey
-            : data.eventKey.slice(0, 7),
+            ? data.eventKey.slice(0, 7) : data.eventKey,
     );
     const existingMatches = await prisma.match.findMany({
         where: { eventId: event.id },
